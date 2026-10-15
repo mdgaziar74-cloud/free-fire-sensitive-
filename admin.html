@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Admin · FF Sensitivity AI</title>
+    <!-- ========================================== -->
+    <!-- PASTE YOUR FIREBASE CONFIGURATION HERE     -->
+    <!-- ========================================== -->
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyCDmlEZyM9aTrqWUFHlI5O6KrLsLADqy9w",
+  authDomain: "free-fire-sensitive.firebaseapp.com",
+  databaseURL: "https://free-fire-sensitive-default-rtdb.firebaseio.com",
+  projectId: "free-fire-sensitive",
+  storageBucket: "free-fire-sensitive.firebasestorage.app",
+  messagingSenderId: "926187228128",
+  appId: "1:926187228128:web:d6c2f96524e60f2e063985"
+};
+    </script>
+    <!-- ========================================== -->
+    <!-- FIREBASE SDK                               -->
+    <!-- ========================================== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
+    </script>
+    <style>
+        /* ==========================================
+                   ADMIN STYLES
+                   ========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #6C3CE1;
+            --primary-dark: #5228B5;
+            --primary-light: #8B5CF6;
+            --secondary: #FF6B6B;
+            --bg-primary: #0A0A12;
+            --bg-secondary: #12121F;
+            --bg-card: #1A1A2E;
+            --bg-card-hover: #222244;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A0B8;
+            --text-muted: #6B6B85;
+            --border-color: #2A2A44;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        html,
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ==========================================
+                   SPLASH
+                   ========================================== */
+        #splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        #splash.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .splash-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+            box-shadow: 0 0 40px rgba(108, 60, 225, 0.3);
+            margin-bottom: 20px;
+        }
+        .splash-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .splash-title span {
+            color: var(--primary-light);
+        }
+        .splash-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .splash-loader {
+            margin-top: 30px;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(108, 60, 225, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==========================================
+                   ADMIN APP
+                   ========================================== */
+        #app {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        #app.visible {
+            display: block;
+        }
+
+        /* ==========================================
+                   AUTH
+                   ========================================== */
+        #authContainer {
+            display: none;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #authContainer.visible {
+            display: flex;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 36px 28px;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .auth-card .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .auth-card .logo h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .auth-card .logo h2 span {
+            color: var(--primary-light);
+        }
+        .auth-card .logo p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .auth-card .form-group {
+            margin-bottom: 16px;
+        }
+        .auth-card label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .auth-card input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .auth-card input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 60, 225, 0.1);
+        }
+        .auth-card .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .auth-card .auth-btn:active {
+            transform: scale(0.97);
+        }
+        .auth-card .auth-btn:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .auth-card .auth-error {
+            color: var(--secondary);
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        /* ==========================================
+                   ADMIN HEADER
+                   ========================================== */
+        .admin-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 10, 18, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .admin-header .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-header .left .logo {
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .admin-header .left .logo span {
+            color: var(--primary-light);
+        }
+        .admin-header .left .badge {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: rgba(108, 60, 225, 0.2);
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+        .admin-header .right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-header .right .email {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: none;
+        }
+        .admin-header .right .logout-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .admin-header .right .logout-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ==========================================
+                   ADMIN TABS
+                   ========================================== */
+        .admin-tabs {
+            display: flex;
+            overflow-x: auto;
+            padding: 12px 16px 0;
+            gap: 4px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            position: sticky;
+            top: 64px;
+            z-index: 90;
+        }
+
+        .admin-tabs .tab {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            border-radius: 0;
+        }
+        .admin-tabs .tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--primary);
+        }
+        .admin-tabs .tab:active {
+            transform: scale(0.95);
+        }
+
+        /* ==========================================
+                   TAB CONTENT
+                   ========================================== */
+        .tab-content {
+            display: none;
+            padding: 16px 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ==========================================
+                   DASHBOARD
+                   ========================================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .stat-card .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* ==========================================
+                   DEVICE TABLE / LIST
+                   ========================================== */
+        .device-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .device-toolbar input {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .device-toolbar input:focus {
+            border-color: var(--primary);
+        }
+        .device-toolbar .add-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .device-toolbar .add-btn:active {
+            transform: scale(0.95);
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .device-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .device-item .info {
+            flex: 1;
+            min-width: 120px;
+        }
+        .device-item .info .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .device-item .info .detail {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .device-item .info .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            margin-left: 6px;
+        }
+        .device-item .info .badge.inactive {
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--secondary);
+        }
+
+        .device-item .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .device-item .actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+        }
+        .device-item .actions button:active {
+            transform: scale(0.95);
+        }
+        .device-item .actions .edit-btn {
+            color: var(--primary-light);
+        }
+        .device-item .actions .delete-btn {
+            color: var(--secondary);
+        }
+
+        .device-empty {
+            padding: 30px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* ==========================================
+                   DEVICE FORM (Modal)
+                   ========================================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9998;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            max-width: 520px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .modal-box .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .modal-box .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-box .form-group {
+            margin-bottom: 14px;
+        }
+        .modal-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 3px;
+        }
+        .modal-box input,
+        .modal-box select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .modal-box input:focus,
+        .modal-box select:focus {
+            border-color: var(--primary);
+        }
+        .modal-box .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-box .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 4px;
+        }
+        .modal-box .submit-btn:active {
+            transform: scale(0.97);
+        }
+        .modal-box .submit-btn:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+                   SETTINGS TAB
+                   ========================================== */
+        .settings-group {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+
+        .settings-group .group-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .settings-group .setting-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-group .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-group .setting-row label {
+            min-width: 100px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .settings-group .setting-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+        }
+        .settings-group .setting-row input:focus {
+            border-color: var(--primary);
+        }
+        .settings-group .setting-row .color-input {
+            width: 40px;
+            height: 40px;
+            padding: 2px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .settings-group .save-settings-btn {
+            padding: 10px 24px;
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 12px;
+        }
+        .settings-group .save-settings-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ==========================================
+                   NOTICES TAB
+                   ========================================== */
+        .notice-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .notice-item .info {
+            flex: 1;
+            min-width: 120px;
+        }
+        .notice-item .info .title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .notice-item .info .msg {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .notice-item .info .meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .notice-item .info .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            margin-left: 6px;
+        }
+        .notice-item .info .badge.inactive {
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--secondary);
+        }
+
+        .notice-item .actions {
+            display: flex;
+            gap: 6px;
+        }
+        .notice-item .actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+        }
+        .notice-item .actions button:active {
+            transform: scale(0.95);
+        }
+        .notice-item .actions .delete-btn {
+            color: var(--secondary);
+        }
+
+        /* ==========================================
+                   TOAST
+                   ========================================== */
+        #toastContainer {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: calc(100% - 40px);
+            max-width: 420px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            animation: toastIn 0.4s ease;
+            pointer-events: auto;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .toast.success {
+            border-color: #4CAF50;
+        }
+        .toast.error {
+            border-color: var(--secondary);
+        }
+        .toast.info {
+            border-color: var(--primary);
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .toast .icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .toast .msg {
+            flex: 1;
+        }
+
+        /* ==========================================
+                   LOADING
+                   ========================================== */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 18, 0.8);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9997;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loading-overlay.visible {
+            display: flex;
+        }
+        .loading-overlay .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(108, 60, 225, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .loading-overlay .text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ==========================================
+                   RESPONSIVE
+                   ========================================== */
+        @media (min-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .admin-header .right .email {
+                display: inline;
+            }
+            .device-item .info .detail {
+                display: inline;
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 720px;
+                margin: 0 auto;
+                border-left: 1px solid var(--border-color);
+                border-right: 1px solid var(--border-color);
+                min-height: 100vh;
+                background: var(--bg-secondary);
+            }
+            #app {
+                background: var(--bg-primary);
+            }
+            .admin-header {
+                max-width: 720px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 100%;
+            }
+            .admin-tabs {
+                max-width: 720px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 100%;
+            }
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+        .text-muted {
+            color: var(--text-muted);
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-12 {
+            margin-top: 12px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .flex {
+            display: flex;
+        }
+        .flex-center {
+            align-items: center;
+            justify-content: center;
+        }
+        .w-full {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+    SPLASH
+    ========================================== -->
+    <div id="splash">
+        <div class="splash-logo">FF</div>
+        <div class="splash-title">Admin <span>Panel</span></div>
+        <div class="splash-sub">Free Fire Sensitivity AI</div>
+        <div class="splash-loader"></div>
+    </div>
+
+    <!-- ==========================================
+    LOADING OVERLAY
+    ========================================== -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="text" id="loadingText">Loading...</div>
+    </div>
+
+    <!-- ==========================================
+    TOAST
+    ========================================== -->
+    <div id="toastContainer"></div>
+
+    <!-- ==========================================
+    AUTH
+    ========================================== -->
+    <div id="authContainer">
+        <div class="auth-card">
+            <div class="logo">
+                <h2>FF <span>AI</span></h2>
+                <p>Admin Authentication</p>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" placeholder="admin@example.com" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="••••••••" />
+            </div>
+            <button class="auth-btn" id="authBtn">🔐 Sign In</button>
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+    ADMIN APP
+    ========================================== -->
+    <div id="app">
+
+        <!-- ========== HEADER ========== -->
+        <header class="admin-header">
+            <div class="left">
+                <div class="logo">FF <span>AI</span></div>
+                <span class="badge">Admin</span>
+            </div>
+            <div class="right">
+                <span class="email" id="adminEmail">admin@example.com</span>
+                <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+            </div>
+        </header>
+
+        <!-- ========== TABS ========== -->
+        <div class="admin-tabs" id="adminTabs">
+            <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="tab" data-tab="devices">📱 Devices</button>
+            <button class="tab" data-tab="settings">⚙️ Settings</button>
+            <button class="tab" data-tab="notices">📢 Notices</button>
+        </div>
+
+        <!-- ========== TAB: DASHBOARD ========== -->
+        <div class="tab-content active" id="tabDashboard">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <span class="icon">📱</span>
+                    <div class="number" id="statDevices">0</div>
+                    <div class="label">Total Devices</div>
+                </div>
+                <div class="stat-card">
+                    <span class="icon">✅</span>
+                    <div class="number" id="statActive">0</div>
+                    <div class="label">Active Devices</div>
+                </div>
+                <div class="stat-card">
+                    <span class="icon">🤖</span>
+                    <div class="number" id="statAI">0</div>
+                    <div class="label">AI Requests</div>
+                </div>
+                <div class="stat-card">
+                    <span class="icon">📢</span>
+                    <div class="number" id="statNotices">0</div>
+                    <div class="label">Active Notices</div>
+                </div>
+            </div>
+
+            <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border-color);">
+                <h4 style="margin-bottom:8px;font-size:14px;">📋 Quick Actions</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <button class="tab" style="padding:8px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;" onclick="switchTab('devices')">➕ Add Device</button>
+                    <button class="tab" style="padding:8px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;" onclick="switchTab('notices')">📢 New Notice</button>
+                    <button class="tab" style="padding:8px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;" onclick="refreshStats()">🔄 Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TAB: DEVICES ========== -->
+        <div class="tab-content" id="tabDevices">
+            <div class="device-toolbar">
+                <input type="text" id="deviceSearch" placeholder="🔍 Search devices..." />
+                <button class="add-btn" id="addDeviceBtn">➕ Add Device</button>
+            </div>
+            <div class="device-list" id="deviceList">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+        <!-- ========== TAB: SETTINGS ========== -->
+        <div class="tab-content" id="tabSettings">
+            <div class="settings-group">
+                <div class="group-title">🎨 App Appearance</div>
+
+                <div class="setting-row">
+                    <label>App Name</label>
+                    <input type="text" id="settingAppName" placeholder="Sensitivity AI" />
+                </div>
+                <div class="setting-row">
+                    <label>Logo Text</label>
+                    <input type="text" id="settingLogo" placeholder="FF" />
+                </div>
+                <div class="setting-row">
+                    <label>Primary Color</label>
+                    <input type="color" id="settingPrimaryColor" class="color-input" value="#6C3CE1" />
+                </div>
+                <div class="setting-row">
+                    <label>Welcome Text</label>
+                    <input type="text" id="settingWelcome" placeholder="Find Your Perfect Free Fire Sensitivity" />
+                </div>
+                <div class="setting-row">
+                    <label>Subtitle</label>
+                    <input type="text" id="settingSubtitle" placeholder="AI-powered device-based recommendations" />
+                </div>
+                <div class="setting-row">
+                    <label>Search Placeholder</label>
+                    <input type="text" id="settingSearchPlaceholder" placeholder="Search your mobile model..." />
+                </div>
+
+                <button class="save-settings-btn" id="saveSettingsBtn">💾 Save Settings</button>
+            </div>
+
+            <div class="settings-group">
+                <div class="group-title">📊 Data Management</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">
+                    <button class="tab" style="padding:8px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;" id="refreshDevicesBtn">🔄 Refresh Devices</button>
+                    <button class="tab" style="padding:8px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;" id="refreshStatsBtn">📊 Refresh Stats</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TAB: NOTICES ========== -->
+        <div class="tab-content" id="tabNotices">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                <button class="add-btn" id="addNoticeBtn">📢 New Notice</button>
+            </div>
+            <div id="noticeList">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+    DEVICE MODAL
+    ========================================== -->
+    <div class="modal-overlay" id="deviceModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="deviceModalTitle">📱 Add Device</h3>
+                <button class="close-btn" id="deviceModalClose">✕</button>
+            </div>
+            <input type="hidden" id="deviceModalId" />
+
+            <div class="form-group">
+                <label>Brand *</label>
+                <input type="text" id="deviceBrand" placeholder="e.g. Infinix" />
+            </div>
+            <div class="form-group">
+                <label>Model *</label>
+                <input type="text" id="deviceModel" placeholder="e.g. GT 30 Pro" />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>RAM</label>
+                    <input type="text" id="deviceRam" placeholder="e.g. 12GB" />
+                </div>
+                <div class="form-group">
+                    <label>Processor</label>
+                    <input type="text" id="deviceProcessor" placeholder="e.g. Dimensity 8300" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Refresh Rate</label>
+                    <input type="text" id="deviceRefresh" placeholder="e.g. 144Hz" />
+                </div>
+                <div class="form-group">
+                    <label>Touch Sampling</label>
+                    <input type="text" id="deviceTouch" placeholder="e.g. 360Hz" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Screen Size</label>
+                    <input type="text" id="deviceScreen" placeholder="e.g. 6.78 inch" />
+                </div>
+                <div class="form-group">
+                    <label>Resolution</label>
+                    <input type="text" id="deviceResolution" placeholder="e.g. 1080x2400" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>GPU</label>
+                    <input type="text" id="deviceGpu" placeholder="e.g. Mali-G610" />
+                </div>
+                <div class="form-group">
+                    <label>Performance Level</label>
+                    <select id="devicePerformance">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High" selected>High</option>
+                        <option value="Ultra">Ultra</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Gaming Score</label>
+                <input type="number" id="deviceScore" placeholder="e.g. 85" min="0" max="100" />
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                <label style="margin-bottom:0;">Active</label>
+                <select id="deviceActive" style="width:auto;flex:1;">
+                    <option value="true">✅ Active</option>
+                    <option value="false">❌ Inactive</option>
+                </select>
+            </div>
+
+            <button class="submit-btn" id="deviceSubmitBtn">💾 Save Device</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+    NOTICE MODAL
+    ========================================== -->
+    <div class="modal-overlay" id="noticeModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="noticeModalTitle">📢 New Notice</h3>
+                <button class="close-btn" id="noticeModalClose">✕</button>
+            </div>
+            <input type="hidden" id="noticeModalId" />
+
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="noticeTitle" placeholder="e.g. New Update Available" />
+            </div>
+            <div class="form-group">
+                <label>Message *</label>
+                <input type="text" id="noticeMessage" placeholder="e.g. Check out the latest device profiles..." />
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="noticeType">
+                    <option value="info">ℹ️ Info</option>
+                    <option value="warning">⚠️ Warning</option>
+                    <option value="success">✅ Success</option>
+                    <option value="update">🔄 Update</option>
+                </select>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                <label style="margin-bottom:0;">Active</label>
+                <select id="noticeActive" style="width:auto;flex:1;">
+                    <option value="true">✅ Active</option>
+                    <option value="false">❌ Inactive</option>
+                </select>
+            </div>
+
+            <button class="submit-btn" id="noticeSubmitBtn">💾 Save Notice</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+    JAVASCRIPT
+    ========================================== -->
+    <script>
+        // ==========================================
+        // FIREBASE INIT
+        // ==========================================
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        const state = {
+            user: null,
+            devices: [],
+            notices: [],
+            stats: {}
+        };
+
+        // ==========================================
+        // DOM REFS
+        // ==========================================
+        const $ = id => document.getElementById(id);
+        const splash = $('splash');
+        const app = $('app');
+        const authContainer = $('authContainer');
+        const authEmail = $('authEmail');
+        const authPassword = $('authPassword');
+        const authBtn = $('authBtn');
+        const authError = $('authError');
+        const adminEmail = $('adminEmail');
+        const logoutBtn = $('logoutBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        const statDevices = $('statDevices');
+        const statActive = $('statActive');
+        const statAI = $('statAI');
+        const statNotices = $('statNotices');
+
+        const deviceList = $('deviceList');
+        const deviceSearch = $('deviceSearch');
+        const addDeviceBtn = $('addDeviceBtn');
+
+        const deviceModal = $('deviceModal');
+        const deviceModalClose = $('deviceModalClose');
+        const deviceModalTitle = $('deviceModalTitle');
+        const deviceModalId = $('deviceModalId');
+        const deviceBrand = $('deviceBrand');
+        const deviceModel = $('deviceModel');
+        const deviceRam = $('deviceRam');
+        const deviceProcessor = $('deviceProcessor');
+        const deviceRefresh = $('deviceRefresh');
+        const deviceTouch = $('deviceTouch');
+        const deviceScreen = $('deviceScreen');
+        const deviceResolution = $('deviceResolution');
+        const deviceGpu = $('deviceGpu');
+        const devicePerformance = $('devicePerformance');
+        const deviceScore = $('deviceScore');
+        const deviceActive = $('deviceActive');
+        const deviceSubmitBtn = $('deviceSubmitBtn');
+
+        const noticeList = $('noticeList');
+        const addNoticeBtn = $('addNoticeBtn');
+        const noticeModal = $('noticeModal');
+        const noticeModalClose = $('noticeModalClose');
+        const noticeModalTitle = $('noticeModalTitle');
+        const noticeModalId = $('noticeModalId');
+        const noticeTitle = $('noticeTitle');
+        const noticeMessage = $('noticeMessage');
+        const noticeType = $('noticeType');
+        const noticeActive = $('noticeActive');
+        const noticeSubmitBtn = $('noticeSubmitBtn');
+
+        const settingAppName = $('settingAppName');
+        const settingLogo = $('settingLogo');
+        const settingPrimaryColor = $('settingPrimaryColor');
+        const settingWelcome = $('settingWelcome');
+        const settingSubtitle = $('settingSubtitle');
+        const settingSearchPlaceholder = $('settingSearchPlaceholder');
+        const saveSettingsBtn = $('saveSettingsBtn');
+
+        const refreshDevicesBtn = $('refreshDevicesBtn');
+        const refreshStatsBtn = $('refreshStatsBtn');
+
+        const loadingOverlay = $('loadingOverlay');
+        const loadingText = $('loadingText');
+
+        // ==========================================
+        // TOAST
+        // ==========================================
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = $('toastContainer');
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span class="icon">${icons[type] || 'ℹ️'}</span><span class="msg">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ==========================================
+        // LOADING
+        // ==========================================
+        function showLoading(text = 'Loading...') {
+            loadingText.textContent = text;
+            loadingOverlay.classList.add('visible');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('visible');
+        }
+
+        // ==========================================
+        // AUTH
+        // ==========================================
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                state.user = user;
+                adminEmail.textContent = user.email || 'admin';
+                authContainer.classList.remove('visible');
+                app.classList.add('visible');
+                splash.classList.add('hide');
+                setTimeout(() => { splash.style.display = 'none'; }, 600);
+                loadData();
+            } else {
+                state.user = null;
+                app.classList.remove('visible');
+                authContainer.classList.add('visible');
+                splash.classList.add('hide');
+                setTimeout(() => { splash.style.display = 'none'; }, 600);
+            }
+        });
+
+        authBtn.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+            if (!email || !password) {
+                authError.textContent = 'Please enter email and password';
+                return;
+            }
+            authError.textContent = '';
+            authBtn.disabled = true;
+            authBtn.textContent = '⏳ Signing in...';
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showToast('Welcome back, Admin!', 'success');
+            } catch (err) {
+                authError.textContent = err.message;
+                showToast('Login failed: ' + err.message, 'error');
+            } finally {
+                authBtn.disabled = false;
+                authBtn.textContent = '🔐 Sign In';
+            }
+        });
+
+        authPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') authBtn.click();
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                showToast('Logged out', 'info');
+            } catch (err) {
+                showToast('Logout failed', 'error');
+            }
+        });
+
+        // ==========================================
+        // TABS
+        // ==========================================
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                switchTab(target);
+            });
+        });
+
+        function switchTab(target) {
+            tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+            tabContents.forEach(c => c.classList.toggle('active', c.id === `tab${target.charAt(0).toUpperCase() + target.slice(1)}`));
+            if (target === 'devices') renderDevices();
+            if (target === 'notices') renderNotices();
+            if (target === 'dashboard') refreshStats();
+        }
+
+        // ==========================================
+        // LOAD DATA
+        // ==========================================
+        async function loadData() {
+            try {
+                showLoading('Loading data...');
+                await Promise.all([
+                    loadDevices(),
+                    loadNotices(),
+                    loadStats(),
+                    loadSettings()
+                ]);
+                renderDevices();
+                renderNotices();
+                updateStats();
+                hideLoading();
+            } catch (err) {
+                console.error('Load data error:', err);
+                hideLoading();
+                showToast('Failed to load data', 'error');
+            }
+        }
+
+        // ==========================================
+        // LOAD DEVICES
+        // ==========================================
+        async function loadDevices() {
+            try {
+                const snapshot = await db.ref('devices').once('value');
+                const data = snapshot.val() || {};
+                state.devices = Object.entries(data).map(([id, d]) => ({ ...d, id }));
+                state.devices.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+            } catch (err) {
+                console.warn('Failed to load devices:', err);
+                state.devices = [];
+            }
+        }
+
+        // ==========================================
+        // LOAD NOTICES
+        // ==========================================
+        async function loadNotices() {
+            try {
+                const snapshot = await db.ref('notices').once('value');
+                const data = snapshot.val() || {};
+                state.notices = Object.entries(data).map(([id, n]) => ({ ...n, id }));
+                state.notices.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            } catch (err) {
+                console.warn('Failed to load notices:', err);
+                state.notices = [];
+            }
+        }
+
+        // ==========================================
+        // LOAD STATS
+        // ==========================================
+        async function loadStats() {
+            try {
+                const snapshot = await db.ref('stats').once('value');
+                state.stats = snapshot.val() || {};
+            } catch (err) {
+                console.warn('Failed to load stats:', err);
+                state.stats = {};
+            }
+        }
+
+        // ==========================================
+        // LOAD SETTINGS
+        // ==========================================
+        async function loadSettings() {
+            try {
+                const snapshot = await db.ref('appSettings').once('value');
+                const data = snapshot.val() || {};
+                settingAppName.value = data.appName || '';
+                settingLogo.value = data.logoText || '';
+                settingPrimaryColor.value = data.primaryColor || '#6C3CE1';
+                settingWelcome.value = data.welcomeText || '';
+                settingSubtitle.value = data.subtitle || '';
+                settingSearchPlaceholder.value = data.searchPlaceholder || '';
+            } catch (err) {
+                console.warn('Failed to load settings:', err);
+            }
+        }
+
+        // ==========================================
+        // UPDATE STATS
+        // ==========================================
+        function updateStats() {
+            const total = state.devices.length;
+            const active = state.devices.filter(d => d.active !== false).length;
+            const aiRequests = state.stats.aiRequests || 0;
+            const activeNotices = state.notices.filter(n => n.active === true).length;
+
+            statDevices.textContent = total;
+            statActive.textContent = active;
+            statAI.textContent = aiRequests;
+            statNotices.textContent = activeNotices;
+        }
+
+        async function refreshStats() {
+            await loadStats();
+            updateStats();
+            showToast('Stats refreshed', 'success');
+        }
+
+        // ==========================================
+        // RENDER DEVICES
+        // ==========================================
+        function renderDevices() {
+            const search = deviceSearch.value.toLowerCase().trim();
+            let filtered = state.devices;
+            if (search) {
+                filtered = filtered.filter(d =>
+                    (d.brand || '').toLowerCase().includes(search) ||
+                    (d.model || '').toLowerCase().includes(search) ||
+                    (d.processor || '').toLowerCase().includes(search)
+                );
+            }
+
+            if (!filtered.length) {
+                deviceList.innerHTML = `<div class="device-empty">📭 No devices found</div>`;
+                return;
+            }
+
+            deviceList.innerHTML = filtered.map(d => `
+                        <div class="device-item" data-id="${d.id}">
+                            <div class="info">
+                                <div class="name">
+                                    ${d.brand || 'Unknown'} ${d.model || 'Unknown'}
+                                    <span class="badge ${d.active === false ? 'inactive' : ''}">
+                                        ${d.active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div class="detail">
+                                    ${d.ram || ''} ${d.processor || ''} ${d.refreshRate || ''}
+                                    <span style="color:var(--text-muted);margin-left:6px;">
+                                        ⚡ ${d.performanceLevel || 'Medium'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="actions">
+                                <button class="edit-btn" onclick="editDevice('${d.id}')">✏️ Edit</button>
+                                <button class="delete-btn" onclick="deleteDevice('${d.id}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+        }
+
+        // ==========================================
+        // DEVICE CRUD
+        // ==========================================
+        addDeviceBtn.addEventListener('click', () => {
+            deviceModalTitle.textContent = '📱 Add Device';
+            deviceModalId.value = '';
+            deviceBrand.value = '';
+            deviceModel.value = '';
+            deviceRam.value = '';
+            deviceProcessor.value = '';
+            deviceRefresh.value = '';
+            deviceTouch.value = '';
+            deviceScreen.value = '';
+            deviceResolution.value = '';
+            deviceGpu.value = '';
+            devicePerformance.value = 'High';
+            deviceScore.value = '';
+            deviceActive.value = 'true';
+            deviceModal.classList.add('visible');
+        });
+
+        deviceModalClose.addEventListener('click', () => {
+            deviceModal.classList.remove('visible');
+        });
+
+        deviceModal.addEventListener('click', (e) => {
+            if (e.target === deviceModal) deviceModal.classList.remove('visible');
+        });
+
+        window.editDevice = function(id) {
+            const d = state.devices.find(dev => dev.id === id);
+            if (!d) return;
+            deviceModalTitle.textContent = '✏️ Edit Device';
+            deviceModalId.value = id;
+            deviceBrand.value = d.brand || '';
+            deviceModel.value = d.model || '';
+            deviceRam.value = d.ram || '';
+            deviceProcessor.value = d.processor || '';
+            deviceRefresh.value = d.refreshRate || '';
+            deviceTouch.value = d.touchSamplingRate || '';
+            deviceScreen.value = d.screenSize || '';
+            deviceResolution.value = d.resolution || '';
+            deviceGpu.value = d.gpu || '';
+            devicePerformance.value = d.performanceLevel || 'High';
+            deviceScore.value = d.gamingScore || '';
+            deviceActive.value = d.active !== false ? 'true' : 'false';
+            deviceModal.classList.add('visible');
+        };
+
+        window.deleteDevice = function(id) {
+            if (!confirm('Are you sure you want to delete this device?')) return;
+            showLoading('Deleting device...');
+            db.ref(`devices/${id}`).remove().then(() => {
+                showToast('Device deleted', 'success');
+                loadDevices().then(() => {
+                    renderDevices();
+                    updateStats();
+                    hideLoading();
+                });
+            }).catch(err => {
+                hideLoading();
+                showToast('Delete failed: ' + err.message, 'error');
+            });
+        };
+
+        deviceSubmitBtn.addEventListener('click', async () => {
+            const brand = deviceBrand.value.trim();
+            const model = deviceModel.value.trim();
+            if (!brand || !model) {
+                showToast('Brand and Model are required', 'error');
+                return;
+            }
+
+            const id = deviceModalId.value;
+            const data = {
+                brand,
+                model,
+                ram: deviceRam.value.trim() || '',
+                processor: deviceProcessor.value.trim() || '',
+                refreshRate: deviceRefresh.value.trim() || '',
+                touchSamplingRate: deviceTouch.value.trim() || '',
+                screenSize: deviceScreen.value.trim() || '',
+                resolution: deviceResolution.value.trim() || '',
+                gpu: deviceGpu.value.trim() || '',
+                performanceLevel: devicePerformance.value || 'High',
+                gamingScore: parseInt(deviceScore.value) || 0,
+                active: deviceActive.value === 'true',
+                updatedAt: Date.now()
+            };
+
+            if (!id) {
+                data.createdAt = Date.now();
+            }
+
+            showLoading(id ? 'Updating device...' : 'Adding device...');
+
+            try {
+                const ref = id ? db.ref(`devices/${id}`) : db.ref('devices').push();
+                await ref.set(data);
+                showToast(id ? 'Device updated' : 'Device added', 'success');
+                deviceModal.classList.remove('visible');
+                await loadDevices();
+                renderDevices();
+                updateStats();
+                hideLoading();
+            } catch (err) {
+                hideLoading();
+                showToast('Save failed: ' + err.message, 'error');
+            }
+        });
+
+        // Device search
+        deviceSearch.addEventListener('input', renderDevices);
+
+        // ==========================================
+        // RENDER NOTICES
+        // ==========================================
+        function renderNotices() {
+            if (!state.notices.length) {
+                noticeList.innerHTML = `<div class="device-empty">📭 No notices</div>`;
+                return;
+            }
+
+            noticeList.innerHTML = state.notices.map(n => `
+                        <div class="notice-item">
+                            <div class="info">
+                                <div class="title">
+                                    ${n.title || 'Untitled'}
+                                    <span class="badge ${n.active !== true ? 'inactive' : ''}">
+                                        ${n.active === true ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div class="msg">${n.message || ''}</div>
+                                <div class="meta">${n.type || 'info'} · ${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ''}</div>
+                            </div>
+                            <div class="actions">
+                                <button onclick="editNotice('${n.id}')">✏️ Edit</button>
+                                <button class="delete-btn" onclick="deleteNotice('${n.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('');
+        }
+
+        // ==========================================
+        // NOTICE CRUD
+        // ==========================================
+        addNoticeBtn.addEventListener('click', () => {
+            noticeModalTitle.textContent = '📢 New Notice';
+            noticeModalId.value = '';
+            noticeTitle.value = '';
+            noticeMessage.value = '';
+            noticeType.value = 'info';
+            noticeActive.value = 'true';
+            noticeModal.classList.add('visible');
+        });
+
+        noticeModalClose.addEventListener('click', () => {
+            noticeModal.classList.remove('visible');
+        });
+
+        noticeModal.addEventListener('click', (e) => {
+            if (e.target === noticeModal) noticeModal.classList.remove('visible');
+        });
+
+        window.editNotice = function(id) {
+            const n = state.notices.find(notice => notice.id === id);
+            if (!n) return;
+            noticeModalTitle.textContent = '✏️ Edit Notice';
+            noticeModalId.value = id;
+            noticeTitle.value = n.title || '';
+            noticeMessage.value = n.message || '';
+            noticeType.value = n.type || 'info';
+            noticeActive.value = n.active === true ? 'true' : 'false';
+            noticeModal.classList.add('visible');
+        };
+
+        window.deleteNotice = function(id) {
+            if (!confirm('Delete this notice?')) return;
+            showLoading('Deleting notice...');
+            db.ref(`notices/${id}`).remove().then(() => {
+                showToast('Notice deleted', 'success');
+                loadNotices().then(() => {
+                    renderNotices();
+                    updateStats();
+                    hideLoading();
+                });
+            }).catch(err => {
+                hideLoading();
+                showToast('Delete failed: ' + err.message, 'error');
+            });
+        };
+
+        noticeSubmitBtn.addEventListener('click', async () => {
+            const title = noticeTitle.value.trim();
+            const message = noticeMessage.value.trim();
+            if (!title || !message) {
+                showToast('Title and Message are required', 'error');
+                return;
+            }
+
+            const id = noticeModalId.value;
+            const data = {
+                title,
+                message,
+                type: noticeType.value || 'info',
+                active: noticeActive.value === 'true',
+                updatedAt: Date.now()
+            };
+
+            if (!id) {
+                data.createdAt = Date.now();
+            }
+
+            showLoading(id ? 'Updating notice...' : 'Adding notice...');
+
+            try {
+                const ref = id ? db.ref(`notices/${id}`) : db.ref('notices').push();
+                await ref.set(data);
+                showToast(id ? 'Notice updated' : 'Notice added', 'success');
+                noticeModal.classList.remove('visible');
+                await loadNotices();
+                renderNotices();
+                updateStats();
+                hideLoading();
+            } catch (err) {
+                hideLoading();
+                showToast('Save failed: ' + err.message, 'error');
+            }
+        });
+
+        // ==========================================
+        // SETTINGS
+        // ==========================================
+        saveSettingsBtn.addEventListener('click', async () => {
+            const settings = {
+                appName: settingAppName.value.trim() || 'Sensitivity AI',
+                logoText: settingLogo.value.trim() || 'FF',
+                primaryColor: settingPrimaryColor.value || '#6C3CE1',
+                welcomeText: settingWelcome.value.trim() || 'Find Your Perfect Free Fire Sensitivity',
+                subtitle: settingSubtitle.value.trim() || 'AI-powered device-based sensitivity recommendations.',
+                searchPlaceholder: settingSearchPlaceholder.value.trim() || 'Search your mobile model...',
+                updatedAt: Date.now()
+            };
+
+            showLoading('Saving settings...');
+
+            try {
+                await db.ref('appSettings').update(settings);
+                showToast('Settings saved!', 'success');
+                hideLoading();
+                // Apply primary color
+                document.documentElement.style.setProperty('--primary', settings.primaryColor);
+                document.documentElement.style.setProperty('--primary-dark', settings.primaryColor);
+                document.documentElement.style.setProperty('--primary-light', settings.primaryColor);
+            } catch (err) {
+                hideLoading();
+                showToast('Save failed: ' + err.message, 'error');
+            }
+        });
+
+        // ==========================================
+        // REFRESH BUTTONS
+        // ==========================================
+        refreshDevicesBtn.addEventListener('click', async () => {
+            showLoading('Refreshing devices...');
+            await loadDevices();
+            renderDevices();
+            updateStats();
+            hideLoading();
+            showToast('Devices refreshed', 'success');
+        });
+
+        refreshStatsBtn.addEventListener('click', refreshStats);
+
+        // ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                deviceModal.classList.remove('visible');
+                noticeModal.classList.remove('visible');
+            }
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshStats();
+            }
+        });
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        console.log('🚀 Admin Panel loaded');
+
+        // Hide splash after a moment if auth state already resolved
+        setTimeout(() => {
+            if (!auth.currentUser) {
+                splash.classList.add('hide');
+                setTimeout(() => { splash.style.display = 'none'; }, 600);
+                authContainer.classList.add('visible');
+            }
+        }, 2000);
+    </script>
+
+</body>
+</html>
